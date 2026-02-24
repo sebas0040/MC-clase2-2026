@@ -1,0 +1,210 @@
+body {
+    font-family: Arial, Helvetica, sans-serif;
+    background-color: #f4f6f9;
+    margin: 0;
+    padding: 40px;
+}
+
+.container {
+    width: 80%;
+    margin: auto;
+}
+
+h2 {
+    text-align: center;
+    margin-bottom: 30px;
+    color: #333;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    background: white;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+thead {
+    background-color: #2c3e50;
+    color: white;
+}
+
+th, td {
+    padding: 12px 15px;
+    text-align: center;
+}
+
+th {
+    text-transform: uppercase;
+    font-size: 14px;
+    letter-spacing: 1px;
+}
+
+tr:nth-child(even) {
+    background-color: #f2f2f2;
+}
+
+tr:hover {
+    background-color: #e9f1ff;
+}
+
+.icon {
+    width: 22px;
+    cursor: pointer;
+    transition: transform 0.2s ease;
+}
+
+.icon:hover {
+    transform: scale(1.2);
+}
+
+.btn-add {
+    display: inline-block;
+    margin-top: 20px;
+    padding: 12px 20px;
+    background-color: #27ae60;
+    color: white;
+    text-decoration: none;
+    border-radius: 6px;
+    font-weight: bold;
+    transition: background 0.3s ease;
+}
+
+.btn-add:hover {
+    background-color: #219150;
+}
+
+.search-form {
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+.search-form input {
+    width: 300px;
+    padding: 10px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    outline: none;
+    font-size: 14px;
+    transition: 0.3s;
+}
+
+.search-form input:focus {
+    border-color: #2c3e50;
+    box-shadow: 0 0 5px rgba(44,62,80,0.3);
+}
+
+.search-form button {
+    padding: 10px 18px;
+    border: none;
+    background-color: #3498db;
+    color: white;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: bold;
+    margin-left: 8px;
+    transition: 0.3s;
+}
+
+.search-form button:hover {
+    background-color: #2980b9;
+}
+
+/* Modal general */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0,0,0,0.5);
+}
+
+.modal-content {
+    background-color: #fff;
+    margin: 10% auto;
+    padding: 20px 30px;
+    border-radius: 10px;
+    width: 400px;
+    max-width: 90%;
+    text-align: center;
+    position: relative;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+}
+
+.modal-content h3 {
+    margin-top: 0;
+    color: #333;
+}
+
+.modal-content input {
+    width: 90%;
+    padding: 10px;
+    margin: 10px 0;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    font-size: 14px;
+    outline: none;
+}
+
+.modal-content input:focus {
+    border-color: #2c3e50;
+    box-shadow: 0 0 5px rgba(44,62,80,0.3);
+}
+
+.modal-buttons {
+    display: flex;
+    justify-content: space-around;
+    margin-top: 20px;
+}
+
+.modal-buttons button,
+.modal-buttons a {
+    padding: 10px 20px;
+    border-radius: 6px;
+    font-weight: bold;
+    cursor: pointer;
+    text-decoration: none;
+    transition: 0.3s;
+}
+
+.modal-buttons .cancel-btn {
+    background-color: #ccc;
+    color: #333;
+}
+
+.modal-buttons .cancel-btn:hover {
+    background-color: #b0b0b0;
+}
+
+.modal-buttons .confirm-btn {
+    background-color: #e74c3c;
+    color: white;
+}
+
+.modal-buttons .confirm-btn:hover {
+    background-color: #c0392b;
+}
+
+.modal-buttons .save-btn {
+    background-color: #27ae60;
+    color: white;
+}
+
+.modal-buttons .save-btn:hover {
+    background-color: #219150;
+}
+
+.close {
+    position: absolute;
+    top: 10px;
+    right: 15px;
+    font-size: 20px;
+    font-weight: bold;
+    color: #333;
+    cursor: pointer;
+}
