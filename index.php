@@ -1,8 +1,5 @@
 <?php 
 include("config/conectdb.php");
-
-$sql = "SELECT * FROM libros";
-$result = $conn->query($sql);
 ?>
 
 <!DOCTYPE html>
@@ -17,9 +14,9 @@ $result = $conn->query($sql);
 <div class="container">
     <h2>📚 Lista de Libros</h2>
 
-    <form method="GET" action="" class="search-form">
-        <input type="text" name="buscar" placeholder="Buscar por código, libro o autor..."
-            value="<?php echo isset($_GET['buscar']) ? $_GET['buscar'] : ''; ?>">
+    <!-- BUSCAR -->
+    <form id="searchForm" class="search-form">
+        <input type="text" id="buscarInput" placeholder="Buscar por código, libro o autor...">
         <button type="submit">Buscar</button>
     </form>
 
@@ -33,104 +30,209 @@ $result = $conn->query($sql);
                 <th>Eliminar</th>
             </tr>
         </thead>
-        <tbody>
-        <?php
-        if ($result->num_rows > 0) {
-            while($row = $result->fetch_assoc()) {
-                echo "<tr data-id='{$row['id_libro']}' data-libro='{$row['libro']}' data-autor='{$row['autor']}'>";
-                echo "<td>" . $row['id_libro'] . "</td>";
-                echo "<td>" . $row['libro'] . "</td>";
-                echo "<td>" . $row['autor'] . "</td>";
-                echo "<td><button class='icon edit-btn'><img src='img/lapiz.png' class='icon'></button></td>";
-                echo "<td><button class='icon delete-btn'><img src='img/bote.png' class='icon'></button></td>";
-                echo "</tr>";
-            }
-        } else {
-            echo "<tr><td colspan='5'>No hay registros</td></tr>";
-        }
-        ?>
+        <tbody id="tablaLibros">
+        <!-- Se llena dinámicamente -->
         </tbody>
     </table>
 
     <button class="btn-add" id="addBtn">+ Agregar Libro</button>
 </div>
 
-<!-- Modal Reutilizable -->
+<!-- MODAL -->
 <div id="modal" class="modal">
     <div class="modal-content">
         <span class="close">&times;</span>
-        <h3 id="modal-title">Modal</h3>
-        <div id="modal-body">
-            <input type="text" id="libroInput" placeholder="Libro">
-            <input type="text" id="autorInput" placeholder="Autor">
-        </div>
+        <h3 id="modal-title"></h3>
+
+        <input type="text" id="libroInput" placeholder="Libro">
+        <input type="text" id="autorInput" placeholder="Autor">
+
         <div class="modal-buttons">
             <button class="cancel-btn">Cancelar</button>
-            <a href="#" class="confirm-btn">Eliminar</a>
-            <button class="save-btn">Guardar</button>
+            <button class="confirm-btn" id="deleteConfirm">Eliminar</button>
+            <button class="save-btn" id="saveBtn">Guardar</button>
         </div>
     </div>
 </div>
 
 <script>
-const modal = document.getElementById('modal');
-const modalTitle = document.getElementById('modal-title');
-const libroInput = document.getElementById('libroInput');
-const autorInput = document.getElementById('autorInput');
-const cancelBtn = modal.querySelector('.cancel-btn');
-const saveBtn = modal.querySelector('.save-btn');
-const confirmBtn = modal.querySelector('.confirm-btn');
-const closeBtn = modal.querySelector('.close');
+const tabla = document.getElementById("tablaLibros");
+const modal = document.getElementById("modal");
+const modalTitle = document.getElementById("modal-title");
+const libroInput = document.getElementById("libroInput");
+const autorInput = document.getElementById("autorInput");
+const saveBtn = document.getElementById("saveBtn");
+const deleteConfirm = document.getElementById("deleteConfirm");
 
-function openModal(type, row = null) {
-    modal.style.display = 'block';
-    libroInput.style.display = autorInput.style.display = 'block';
-    saveBtn.style.display = confirmBtn.style.display = 'none';
+let currentId = null;
+let currentAction = null;
 
-    if(type === 'add') {
-        modalTitle.textContent = 'Agregar Libro';
-        libroInput.value = '';
-        autorInput.value = '';
-        saveBtn.style.display = 'inline-block';
-    }
-    if(type === 'edit') {
-        modalTitle.textContent = 'Editar Libro';
-        libroInput.value = row.dataset.libro;
-        autorInput.value = row.dataset.autor;
-        saveBtn.style.display = 'inline-block';
-    }
-    if(type === 'delete') {
-        modalTitle.textContent = 'Eliminar Libro';
-        libroInput.style.display = autorInput.style.display = 'none';
-        confirmBtn.style.display = 'inline-block';
-        confirmBtn.href = `eliminar.php?id_libro=${row.dataset.id}`;
+/* =========================
+   FUNCIÓN PARA CARGAR LIBROS
+========================= */
+async function cargarLibros(busqueda = "") {
+    const response = await fetch(`api/api.php?action=search&buscar=${encodeURIComponent(busqueda)}`);
+    const data = await response.json();
+
+    tabla.innerHTML = "";
+
+    if(data.success && data.data.length > 0){
+        data.data.forEach(libro => {
+            tabla.innerHTML += `
+                <tr>
+                    <td>${libro.id_libro}</td>
+                    <td>${libro.libro}</td>
+                    <td>${libro.autor}</td>
+                    <td><button onclick="abrirEditar(${libro.id_libro}, '${libro.libro}', '${libro.autor}')">✏️</button></td>
+                    <td><button onclick="abrirEliminar(${libro.id_libro})">🗑️</button></td>
+                </tr>
+            `;
+        });
+    } else {
+        tabla.innerHTML = "<tr><td colspan='5'>No hay resultados</td></tr>";
     }
 }
 
-// Eventos
-document.querySelectorAll('.edit-btn').forEach(btn => {
-    btn.addEventListener('click', () => openModal('edit', btn.closest('tr')));
-});
-document.querySelectorAll('.delete-btn').forEach(btn => {
-    btn.addEventListener('click', () => openModal('delete', btn.closest('tr')));
-});
-document.getElementById('addBtn').addEventListener('click', () => openModal('add'));
+/* =========================
+   FETCH AGREGAR
+========================= */
+async function agregarLibro(libro, autor){
+    const response = await fetch("api/api.php?action=add", {
+        method: "POST",
+        headers: {"Content-Type":"application/json"},
+        body: JSON.stringify({libro, autor})
+    });
 
-cancelBtn.addEventListener('click', () => modal.style.display = 'none');
-closeBtn.addEventListener('click', () => modal.style.display = 'none');
-window.addEventListener('click', e => { if(e.target == modal) modal.style.display='none'; });
+    const data = await response.json();
+    alert(data.message);
 
-saveBtn.addEventListener('click', () => {
+    if(data.success){
+        cerrarModal();
+        cargarLibros();
+    }
+}
+
+/* =========================
+   FETCH EDITAR
+========================= */
+async function editarLibro(id, libro, autor){
+    const response = await fetch("api/api.php?action=edit", {
+        method: "POST",
+        headers: {"Content-Type":"application/json"},
+        body: JSON.stringify({id_libro:id, libro, autor})
+    });
+
+    const data = await response.json();
+    alert(data.message);
+
+    if(data.success){
+        cerrarModal();
+        cargarLibros();
+    }
+}
+
+/* =========================
+   FETCH ELIMINAR
+========================= */
+async function eliminarLibro(id){
+    const response = await fetch("api/api.php?action=delete", {
+        method: "POST",
+        headers: {"Content-Type":"application/json"},
+        body: JSON.stringify({id_libro:id})
+    });
+
+    const data = await response.json();
+    alert(data.message);
+
+    if(data.success){
+        cerrarModal();
+        cargarLibros();
+    }
+}
+
+/* =========================
+   BUSCAR
+========================= */
+document.getElementById("searchForm").addEventListener("submit", e => {
+    e.preventDefault();
+    const texto = document.getElementById("buscarInput").value;
+    cargarLibros(texto);
+});
+
+/* =========================
+   CONTROL MODAL
+========================= */
+document.getElementById("addBtn").addEventListener("click", () => {
+    currentAction = "add";
+    modalTitle.textContent = "Agregar Libro";
+    libroInput.style.display = "block";
+    autorInput.style.display = "block";
+    deleteConfirm.style.display = "none";
+    saveBtn.style.display = "inline-block";
+    libroInput.value = "";
+    autorInput.value = "";
+    modal.style.display = "block";
+});
+
+function abrirEditar(id, libro, autor){
+    currentAction = "edit";
+    currentId = id;
+    modalTitle.textContent = "Editar Libro";
+    libroInput.value = libro;
+    autorInput.value = autor;
+    libroInput.style.display = "block";
+    autorInput.style.display = "block";
+    deleteConfirm.style.display = "none";
+    saveBtn.style.display = "inline-block";
+    modal.style.display = "block";
+}
+
+function abrirEliminar(id){
+    currentAction = "delete";
+    currentId = id;
+    modalTitle.textContent = "Eliminar Libro";
+    libroInput.style.display = "none";
+    autorInput.style.display = "none";
+    saveBtn.style.display = "none";
+    deleteConfirm.style.display = "inline-block";
+    modal.style.display = "block";
+}
+
+saveBtn.addEventListener("click", () => {
     const libro = libroInput.value.trim();
     const autor = autorInput.value.trim();
-    if(libro && autor) {
-        alert(`Aquí se guardaría el libro: ${libro}, autor: ${autor}`);
-        modal.style.display = 'none';
-        // Aquí puedes hacer un POST usando fetch/AJAX para guardar en DB
-    } else {
-        alert('Complete ambos campos');
+
+    if(!libro || !autor){
+        alert("Complete todos los campos");
+        return;
+    }
+
+    if(currentAction === "add"){
+        agregarLibro(libro, autor);
+    }
+
+    if(currentAction === "edit"){
+        editarLibro(currentId, libro, autor);
     }
 });
+
+deleteConfirm.addEventListener("click", () => {
+    eliminarLibro(currentId);
+});
+
+function cerrarModal(){
+    modal.style.display = "none";
+}
+
+document.querySelector(".close").onclick = cerrarModal;
+document.querySelector(".cancel-btn").onclick = cerrarModal;
+window.onclick = e => { if(e.target == modal) cerrarModal(); };
+
+/* =========================
+   CARGA INICIAL
+========================= */
+cargarLibros();
+
 </script>
 
 </body>
