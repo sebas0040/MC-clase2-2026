@@ -1,0 +1,44 @@
+version: "3.9"
+
+services:
+
+  # ── Base de datos ──────────────────────────────────────────
+  db:
+    image: mysql:8.0
+    container_name: mc_clase2_db
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root1234
+      MYSQL_DATABASE: uden_db_clase2
+      MYSQL_USER: Galel
+      MYSQL_PASSWORD: "Sebas#12"
+    volumes:
+      # Crea las tablas automáticamente la primera vez
+      - ./docker/init.sql:/docker-entrypoint-initdb.d/init.sql
+      # Persiste los datos aunque el contenedor se detenga
+      - db_data:/var/lib/mysql
+    ports:
+      - "3307:3306"   # 3307 en tu PC → 3306 dentro del contenedor
+                      # (3307 para no chocar con XAMPP si sigue corriendo)
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uGalel", "-pSebas#12"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── Servidor web ───────────────────────────────────────────
+  web:
+    build: .            # usa el Dockerfile de esta misma carpeta
+    container_name: mc_clase2_web
+    restart: unless-stopped
+    ports:
+      - "8080:80"       # accedes en http://localhost:8080
+    volumes:
+      # Monta el código en vivo — los cambios se reflejan sin rebuild
+      - .:/var/www/html
+    depends_on:
+      db:
+        condition: service_healthy   # espera a que MySQL esté listo
+
+volumes:
+  db_data:

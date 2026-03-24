@@ -4,23 +4,23 @@
  * MC-CLASE2-2026 | Library Management System
  */
 
-// Capture any accidental PHP warnings/notices so they don't corrupt JSON output
+// Captura warnings para que no contaminen el JSON
 ob_start();
 
-// Show errors in the PHP error log only, never in the HTTP response body
 ini_set('display_errors', '0');
 ini_set('log_errors',     '1');
 error_reporting(E_ALL);
 
-define('DB_HOST',    'localhost');
-define('DB_USER',    'Galel');
-define('DB_PASS',    'Sebas#12');
-define('DB_NAME',    'uden_db_clase2');
+// En Docker, el host es el nombre del servicio definido en docker-compose.yml
+// En XAMPP local sería 'localhost' — cambia según tu entorno
+define('DB_HOST',    getenv('DB_HOST')     ?: 'db');
+define('DB_USER',    getenv('DB_USER')     ?: 'Galel');
+define('DB_PASS',    getenv('DB_PASSWORD') ?: 'Sebas#12');
+define('DB_NAME',    getenv('DB_NAME')     ?: 'uden_db_clase2');
 define('DB_CHARSET', 'utf8mb4');
 
 /**
- * Returns a secure MySQLi connection.
- * Throws RuntimeException on failure (credentials never exposed to client).
+ * Devuelve una conexión MySQLi segura.
  */
 function getConnection() {
     $conn = new mysqli(DB_HOST, DB_USER, DB_PASS, DB_NAME);
@@ -31,15 +31,14 @@ function getConnection() {
     }
 
     $conn->set_charset(DB_CHARSET);
-
     return $conn;
 }
 
 /**
- * Sends a JSON error response and terminates execution.
+ * Respuesta JSON de error.
  */
 function sendError($code, $message) {
-    ob_end_clean(); // discard any buffered HTML warnings
+    ob_end_clean();
     http_response_code($code);
     header('Content-Type: application/json; charset=utf-8');
     echo json_encode(['success' => false, 'message' => $message]);
@@ -47,10 +46,10 @@ function sendError($code, $message) {
 }
 
 /**
- * Sends a JSON success response and terminates execution.
+ * Respuesta JSON de éxito.
  */
 function sendSuccess($data = null, $message = 'OK') {
-    ob_end_clean(); // discard any buffered HTML warnings
+    ob_end_clean();
     header('Content-Type: application/json; charset=utf-8');
     echo json_encode(['success' => true, 'message' => $message, 'data' => $data]);
     exit;

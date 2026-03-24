@@ -26,13 +26,22 @@ const API = {
       ...options,
     });
 
-    const raw = await res.text();
+    // const raw = await res.text();
+
+    // let json;
+    // try {
+    //   json = JSON.parse(raw);
+    // } catch (_) {
+    //   // PHP returned HTML (fatal error, warning, etc.) — show first 200 chars
+    //   const preview = raw.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 200);
+    //   throw new Error('PHP error: ' + preview);
+    // }
 
     let json;
     try {
-      json = JSON.parse(raw);
+      json = await res.json(); // ✅ CLAVE
     } catch (_) {
-      // PHP returned HTML (fatal error, warning, etc.) — show first 200 chars
+      const raw = await res.text();
       const preview = raw.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 200);
       throw new Error('PHP error: ' + preview);
     }
