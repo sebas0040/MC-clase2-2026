@@ -88,6 +88,34 @@ function sortData(arr, col, dir) {
   });
 }
 
+function normalizeMojibake(value) {
+  const str = String(value ?? '');
+  if (!/[ÃÂâ]/.test(str)) return str;
+
+  try {
+    const bytes = Uint8Array.from(str, ch => ch.charCodeAt(0) & 0xff);
+    const decoded = new TextDecoder('utf-8', { fatal: false }).decode(bytes);
+    return decoded.includes('�') ? str : decoded;
+  } catch (_) {
+    return str;
+  }
+}
+
+function normalizeBookRecord(book) {
+  return {
+    ...book,
+    libro: normalizeMojibake(book.libro),
+    autor: normalizeMojibake(book.autor),
+  };
+}
+
+function normalizeAuthorRecord(author) {
+  return {
+    ...author,
+    autor: normalizeMojibake(author.autor),
+  };
+}
+
 function filterData(arr, query, fields) {
   if (!query.trim()) return arr;
   const q = query.toLowerCase();
@@ -204,7 +232,7 @@ function handleSortClick(type, col) {
 async function loadBooks() {
   try {
     const res = await API.getBooks();
-    state.books = res.data ?? [];
+    state.books = (res.data ?? []).map(normalizeBookRecord);
     renderBooks();
   } catch (e) {
     toast(e.message, 'error');
@@ -214,7 +242,7 @@ async function loadBooks() {
 async function loadAuthors() {
   try {
     const res = await API.getAuthors();
-    state.authors = res.data ?? [];
+    state.authors = (res.data ?? []).map(normalizeAuthorRecord);
     renderAuthors();
     populateAuthorSelect();
   } catch (e) {
